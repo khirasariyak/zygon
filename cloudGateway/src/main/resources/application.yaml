@@ -1,0 +1,43 @@
+server:
+  port: 9090
+
+spring:
+  application:
+    name: API-Gateway
+  config:
+    import: configserver:http://localhost:9296
+  datasource:
+    url: jdbc:mysql://${DB_HOST:localhost}:3306
+    username: root
+    password: 12345678
+    driverClassName: com.mysql.cj.jdbc.Driver
+  cloud:
+    gateway:
+      routes:
+        - id: Order-Service
+          uri: lb://Order-Service
+          predicates:
+            - Path=/v1/orders/**
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: Order-Service
+                fallbackuri: forward:/orderServiceFallBack
+        - id: Product-Service
+          uri: lb://Product-Service
+          predicates:
+            - Path=/v1/products/**
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: Product-Service
+                fallbackuri: forward:/productServiceFallBack
+        - id: Payment-Service
+          uri: lb://Payment-Service
+          predicates:
+            - Path=/v1/payments/**
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: Payment-Service
+                fallbackuri: forward:/paymentServiceFallBack
